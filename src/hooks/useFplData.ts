@@ -8,8 +8,10 @@ import {
   getCurrentEvent,
   getNextEvent,
   getPlayer,
+  getEntry,
+  getEntryPicks,
 } from '@/lib/fpl-api';
-import { Player, Team, Event } from '@/types';
+import { Player, Team, Event, FPLEntry } from '@/types';
 
 // Query keys
 export const queryKeys = {
@@ -121,6 +123,44 @@ export function useBootstrapStatic() {
       }
       return response.data;
     },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/**
+ * Hook to fetch user's FPL entry (team info)
+ */
+export function useEntry(entryId: number | null) {
+  return useQuery({
+    queryKey: ['entry', entryId],
+    queryFn: async () => {
+      if (!entryId) return null;
+      const response = await getEntry(entryId);
+      if (response.error || !response.data) {
+        throw new Error(response.error || 'Failed to fetch entry');
+      }
+      return response.data;
+    },
+    enabled: !!entryId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/**
+ * Hook to fetch user's FPL entry picks for a gameweek
+ */
+export function useEntryPicks(entryId: number | null, eventId: number | null) {
+  return useQuery({
+    queryKey: ['entryPicks', entryId, eventId],
+    queryFn: async () => {
+      if (!entryId || !eventId) return null;
+      const response = await getEntryPicks(entryId, eventId);
+      if (response.error || !response.data) {
+        throw new Error(response.error || 'Failed to fetch entry picks');
+      }
+      return response.data;
+    },
+    enabled: !!entryId && !!eventId,
     staleTime: 5 * 60 * 1000,
   });
 }

@@ -1,16 +1,41 @@
 'use client';
 
-import { useState } from 'react';
-import { usePlayers } from '@/hooks/useFplData';
+import { useState, useMemo } from 'react';
+import { usePlayers, useEntry, useEntryPicks, useCurrentEvent } from '@/hooks/useFplData';
 import { Formation, FORMATIONS, OptimizedTeam } from '@/types';
 import { optimizeTeam } from '@/lib/optimizer';
+import { useFPLStore } from '@/store';
+import { EntryIdInput } from '@/components/EntryIdInput';
 
 export default function OptimizerPage() {
   const { data: players, isLoading, error } = usePlayers();
+  const entryId = useFPLStore((state) => state.entryId);
+  const { data: entry } = useEntry(entryId);
+  const { data: currentEvent } = useCurrentEvent();
+  const { data: entryPicks } = useEntryPicks(entryId, currentEvent?.id || null);
+  
+  // Calculate user's current team value from picks
+  const userTeamValue = useMemo(() => {
+    const picks = (entryPicks as any)?.picks;
+    if (!picks || !players) return null;
+    const playerIds = picks.map((p: any) => p.element);
+    const teamPlayers = players.filter((p) => playerIds.includes(p.id));
+    const totalValue = teamPlayers.reduce((sum, p) => sum + p.price, 0);
+    const bank = entry?.bank || 0;
+    return totalValue + (bank / 10);
+  }, [entryPicks, players, entry]);
+
   const [budget, setBudget] = useState(100);
   const [formation, setFormation] = useState<Formation>(FORMATIONS[0]);
   const [optimizedTeam, setOptimizedTeam] = useState<OptimizedTeam | null>(null);
   const [isOptimizing, setIsOptimizing] = useState(false);
+
+  // Set default budget to user's team value
+  useMemo(() => {
+    if (userTeamValue && userTeamValue > 0) {
+      setBudget(Math.round(userTeamValue * 10) / 10);
+    }
+  }, [userTeamValue]);
 
   const handleOptimize = () => {
     if (!players) return;
@@ -44,6 +69,8 @@ export default function OptimizerPage() {
 
   return (
     <div className="space-y-6">
+      <EntryIdInput />
+      
       <div className="text-center">
         <h1 className="text-3xl font-bold text-white mb-2">Team Optimizer</h1>
         <p className="text-slate-400">Find your optimal starting XI using linear programming</p>

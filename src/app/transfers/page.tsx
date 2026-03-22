@@ -1,25 +1,36 @@
 'use client';
 
-import { useState } from 'react';
-import { usePlayers } from '@/hooks/useFplData';
+import { useState, useMemo } from 'react';
+import { usePlayers, useEntry, useEntryPicks, useCurrentEvent } from '@/hooks/useFplData';
 import { suggestTransfers } from '@/lib/optimizer';
+import { useFPLStore } from '@/store';
+import { EntryIdInput } from '@/components/EntryIdInput';
 
 export default function TransfersPage() {
   const { data: players, isLoading, error } = usePlayers();
+  const entryId = useFPLStore((state) => state.entryId);
+  const { data: entry } = useEntry(entryId);
+  const { data: currentEvent } = useCurrentEvent();
+  const { data: entryPicks } = useEntryPicks(entryId, currentEvent?.id || null);
+  
+  // Get user's current team from picks
+  const currentTeam = useMemo(() => {
+    const picks = (entryPicks as any)?.picks;
+    if (!picks || !players) return null;
+    const playerIds = picks.map((p: any) => p.element);
+    return players.filter((p) => playerIds.includes(p.id));
+  }, [entryPicks, players]);
+
   const [numTransfers, setNumTransfers] = useState(1);
   const [budget, setBudget] = useState(0);
   const [suggestions, setSuggestions] = useState<{ in: typeof players extends infer P ? P extends (infer U)[] ? U : never : never; out: typeof players extends infer P ? P extends (infer U)[] ? U : never : never; pointsGain: number }[]>([]);
-  const [selectedPlayers, setSelectedPlayers] = useState<number[]>([]);
-
-  // For demo, we'll use top scorers as "current team" if no selection
-  const currentTeam = players?.slice(0, 15) || [];
 
   const handleSuggest = () => {
     if (!players) return;
     
-    const teamToUse = selectedPlayers.length > 0 
-      ? players.filter(p => selectedPlayers.includes(p.id))
-      : currentTeam;
+    const teamToUse = currentTeam && currentTeam.length > 0 
+      ? currentTeam
+      : players.slice(0, 15); // Fallback
     
     if (teamToUse.length === 0) return;
     
@@ -46,6 +57,8 @@ export default function TransfersPage() {
 
   return (
     <div className="space-y-6">
+      <EntryIdInput />
+      
       <div className="text-center">
         <h1 className="text-3xl font-bold text-white mb-2">Transfer Suggestions</h1>
         <p className="text-slate-400">Get data-driven transfer recommendations</p>

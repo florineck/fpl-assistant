@@ -1,10 +1,11 @@
 'use client';
 
-import { usePlayers, useCurrentEvent, useNextEvent, useTeams } from '@/hooks/useFplData';
+import { usePlayers, useCurrentEvent, useNextEvent, useTeams, useEntry, useEntryPicks } from '@/hooks/useFplData';
 import { Player, FORMATIONS } from '@/types';
 import { useFPLStore } from '@/store';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { EntryIdInput } from '@/components/EntryIdInput';
 
 export default function Home() {
   const { data: players, isLoading: playersLoading, error: playersError } = usePlayers();
@@ -12,12 +13,35 @@ export default function Home() {
   const { data: nextEvent } = useNextEvent();
   const { data: teams } = useTeams();
   const setPlayers = useFPLStore((state) => state.setPlayers);
+  const entryId = useFPLStore((state) => state.entryId);
+  const { data: entry, isLoading: entryLoading } = useEntry(entryId);
+  const { data: entryPicks } = useEntryPicks(entryId, currentEvent?.id || null);
 
   useEffect(() => {
     if (players) {
       setPlayers(players);
     }
   }, [players, setPlayers]);
+
+  // Get user's team players
+  const userTeam = useMemo(() => {
+    const picks = (entryPicks as any)?.picks;
+    if (!picks || !players || !Array.isArray(picks)) return null;
+    return picks
+      .map((pick: any) => players.find((p) => p.id === pick.element))
+      .filter(Boolean);
+  }, [entryPicks, players]);
+
+  // Get user's captain
+  const captain = useMemo(() => {
+    const picks = (entryPicks as any)?.picks;
+    if (!picks || !players) return null;
+    const captainPick = picks.find((p: any) => p.isCaptain);
+    if (captainPick) {
+      return players.find((p) => p.id === captainPick.element);
+    }
+    return null;
+  }, [entryPicks, players]);
 
   // Get top performers
   const topScorers = players?.slice().sort((a, b) => b.totalPoints - a.totalPoints).slice(0, 5) || [];
@@ -43,6 +67,41 @@ export default function Home() {
 
   return (
     <div className="space-y-8">
+      {/* Entry ID Input */}
+      <EntryIdInput />
+
+      {/* User's Team */}
+      {entry && userTeam && userTeam.length > 0 && (
+        <div className="bg-slate-900 border border-slate-800 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Your Team: {entry.entryName}</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            <div>
+              <p className="text-sm text-slate-400">Overall Rank</p>
+              <p className="text-xl font-bold text-white">#{entry.overallRank?.toLocaleString()}</p>
+            </div>
+            <div>
+              <p className="text-sm text-slate-400">Total Points</p>
+              <p className="text-xl font-bold text-emerald-400">{entry.overallPoints}</p>
+            </div>
+            <div>
+              <p className="text-sm text-slate-400">Team Value</p>
+              <p className="text-xl font-bold text-white">£{(entry.teamValue / 10).toFixed(1)}m</p>
+            </div>
+            <div>
+              <p className="text-sm text-slate-400">In the Bank</p>
+              <p className="text-xl font-bold text-white">£{(entry.bank / 10).toFixed(1)}m</p>
+            </div>
+          </div>
+          {captain && (
+            <div className="bg-amber-900/20 border border-amber-800 rounded-lg p-3 inline-flex items-center gap-2">
+              <span className="text-amber-400">★ Captain:</span>
+              <span className="text-white font-semibold">{captain.webName}</span>
+              <span className="text-slate-400">({captain.epThis?.toFixed(1)} pts)</span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Header */}
       <div className="text-center">
         <h1 className="text-4xl font-bold text-white mb-2">FPL Assistant</h1>
