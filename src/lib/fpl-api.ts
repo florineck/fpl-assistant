@@ -8,8 +8,8 @@ import {
   ApiResponse,
 } from '@/types';
 
-// Base API URL
-const FPL_API_BASE = 'https://fantasy.premierleague.com/api';
+// Base API URL - using our own proxy
+const FPL_API_BASE = '/api/fpl';
 
 // In-memory cache
 interface CacheEntry<T> {
@@ -72,7 +72,7 @@ async function getCachedOrFetch<T>(url: string, cacheKey: string): Promise<ApiRe
  */
 export async function getBootstrapStatic(): Promise<ApiResponse<BootstrapStaticResponse>> {
   return getCachedOrFetch<BootstrapStaticResponse>(
-    `${FPL_API_BASE}/bootstrap-static/`,
+    `${FPL_API_BASE}?endpoint=bootstrap-static`,
     'bootstrap-static'
   );
 }
@@ -241,7 +241,7 @@ export async function getPlayer(playerId: number): Promise<ApiResponse<Player | 
  */
 export async function getEntry(entryId: number): Promise<ApiResponse<FPLEntry>> {
   return getCachedOrFetch<FPLEntry>(
-    `${FPL_API_BASE}/entry/${entryId}/`,
+    `${FPL_API_BASE}?endpoint=entry/${entryId}/`,
     `entry-${entryId}`
   );
 }
@@ -251,7 +251,7 @@ export async function getEntry(entryId: number): Promise<ApiResponse<FPLEntry>> 
  */
 export async function getEntryHistory(entryId: number): Promise<ApiResponse<unknown>> {
   return getCachedOrFetch(
-    `${FPL_API_BASE}/entry/${entryId}/history/`,
+    `${FPL_API_BASE}?endpoint=entry/${entryId}/history/`,
     `entry-history-${entryId}`
   );
 }
@@ -261,7 +261,7 @@ export async function getEntryHistory(entryId: number): Promise<ApiResponse<unkn
  */
 export async function getEntryPicks(entryId: number, eventId: number): Promise<ApiResponse<unknown>> {
   return getCachedOrFetch(
-    `${FPL_API_BASE}/entry/${entryId}/event/${eventId}/picks/`,
+    `${FPL_API_BASE}?endpoint=entry/${entryId}/event/${eventId}/picks/`,
     `entry-picks-${entryId}-${eventId}`
   );
 }
@@ -271,7 +271,7 @@ export async function getEntryPicks(entryId: number, eventId: number): Promise<A
  */
 export async function getFixtures(): Promise<ApiResponse<unknown>> {
   return getCachedOrFetch(
-    `${FPL_API_BASE}/fixtures/`,
+    `${FPL_API_BASE}?endpoint=fixtures/`,
     'fixtures'
   );
 }
