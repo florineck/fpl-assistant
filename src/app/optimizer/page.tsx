@@ -152,13 +152,13 @@ export default function OptimizerPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-amber-900/20 border border-amber-800 rounded-lg p-4">
               <p className="text-sm text-amber-400 mb-1">Captain</p>
-              <p className="text-xl font-bold text-white">{optimizedTeam.captain.webName}</p>
-              <p className="text-sm text-slate-400">£{optimizedTeam.captain.price}m • {optimizedTeam.captain.position}</p>
+              <p className="text-xl font-bold text-white">{optimizedTeam.captain?.webName || 'N/A'}</p>
+              <p className="text-sm text-slate-400">£{optimizedTeam.captain?.price || 0}m • {optimizedTeam.captain?.position || '-'}</p>
             </div>
             <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
               <p className="text-sm text-slate-400 mb-1">Vice-Captain</p>
-              <p className="text-xl font-bold text-white">{optimizedTeam.viceCaptain.webName}</p>
-              <p className="text-sm text-slate-400">£{optimizedTeam.viceCaptain.price}m • {optimizedTeam.viceCaptain.position}</p>
+              <p className="text-xl font-bold text-white">{optimizedTeam.viceCaptain?.webName || 'N/A'}</p>
+              <p className="text-sm text-slate-400">£{optimizedTeam.viceCaptain?.price || 0}m • {optimizedTeam.viceCaptain?.position || '-'}</p>
             </div>
           </div>
 
