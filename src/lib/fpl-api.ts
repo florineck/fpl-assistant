@@ -155,8 +155,8 @@ function mapElementToPlayer(
   teams: Team[],
   elementTypes: ElementType[]
 ): Player {
-  const team = teams.find((t) => t.id === element.team);
-  const position = elementTypes.find((e) => e.id === element.elementType);
+  const team = teams?.find((t) => t.id === element.team);
+  const position = elementTypes?.find((e) => e.id === element.elementType);
 
   return {
     id: element.id,
@@ -201,8 +201,10 @@ export async function getAllPlayers(): Promise<ApiResponse<Player[]>> {
   const response = await getBootstrapStatic();
 
   if (response.data) {
+    const teams = response.data.teams || [];
+    const elementTypes = response.data.elementTypes || [];
     const players = response.data.elements.map((element) =>
-      mapElementToPlayer(element, response.data!.teams, response.data!.elementTypes)
+      mapElementToPlayer(element, teams, elementTypes)
     );
     return {
       data: players,
