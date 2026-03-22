@@ -6,6 +6,7 @@ import {
   FPLEntry,
   Event,
   ApiResponse,
+  FPLElement,
 } from '@/types';
 
 // Base API URL - using our own proxy
@@ -101,7 +102,7 @@ export async function getElementTypes(): Promise<ApiResponse<ElementType[]>> {
   const response = await getBootstrapStatic();
   if (response.data) {
     return {
-      data: response.data.elementTypes,
+      data: response.data.element_types,
       status: 'success',
     };
   }
@@ -151,37 +152,37 @@ export async function getNextEvent(): Promise<ApiResponse<Event | null>> {
  * Map FPL element to Player interface
  */
 function mapElementToPlayer(
-  element: BootstrapStaticResponse['elements'][0],
+  element: FPLElement,
   teams: Team[],
   elementTypes: ElementType[]
 ): Player {
   const team = teams?.find((t) => t.id === element.team);
-  const position = elementTypes?.find((e) => e.id === element.elementType);
+  const position = elementTypes?.find((e) => e.id === element.element_type);
 
   return {
     id: element.id,
-    firstName: element.firstName,
-    secondName: element.secondName,
-    webName: element.webName,
+    firstName: element.first_name,
+    secondName: element.second_name,
+    webName: element.web_name,
     team: element.team,
     teamName: team?.name || 'Unknown',
     position: (position?.singularName?.toUpperCase().slice(0, 3) as Player['position']) || 'MID',
-    price: element.price / 10,
-    form: typeof element.form === 'string' ? parseFloat(element.form) : element.form || 0,
-    totalPoints: element.totalPoints,
-    minutesPlayed: element.minutesPlayed,
-    goalsScored: element.goalsScored,
+    price: element.now_cost / 10, // now_cost is in 0.1m units
+    form: parseFloat(element.form) || 0,
+    totalPoints: element.total_points,
+    minutesPlayed: element.minutes,
+    goalsScored: element.goals_scored,
     assists: element.assists,
-    cleanSheets: element.cleanSheets,
-    bonusPoints: element.bonusPoints,
-    expectedGoals: parseFloat(String(element.expectedGoals)) || 0,
-    expectedAssists: parseFloat(String(element.expectedAssists)) || 0,
-    news: element.news,
+    cleanSheets: element.clean_sheets,
+    bonusPoints: element.bonus,
+    expectedGoals: parseFloat(element.expected_goals) || 0,
+    expectedAssists: parseFloat(element.expected_assists) || 0,
+    news: element.news || '',
     status: mapStatus(element.status),
-    chanceOfPlaying: element.chanceOfPlaying || 0,
-    dreamteamCount: element.dreamteamCount,
-    epNext: parseFloat(String(element.epNext)) || 0,
-    epThis: parseFloat(String(element.epThis)) || 0,
+    chanceOfPlaying: element.chance_of_playing_next_round || 0,
+    dreamteamCount: element.dreamteam_count,
+    epNext: parseFloat(element.ep_next) || 0,
+    epThis: parseFloat(element.ep_this) || 0,
   };
 }
 
@@ -202,7 +203,7 @@ export async function getAllPlayers(): Promise<ApiResponse<Player[]>> {
 
   if (response.data) {
     const teams = response.data.teams || [];
-    const elementTypes = response.data.elementTypes || [];
+    const elementTypes = response.data.element_types || [];
     const players = response.data.elements.map((element) =>
       mapElementToPlayer(element, teams, elementTypes)
     );

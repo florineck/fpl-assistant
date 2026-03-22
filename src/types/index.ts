@@ -31,12 +31,38 @@ export interface Player {
   epThis: number;
 }
 
+// Raw FPL element from API
+export interface FPLElement {
+  id: number;
+  first_name: string;
+  second_name: string;
+  web_name: string;
+  team: number;
+  element_type: number;
+  now_cost: number;
+  form: string;
+  total_points: number;
+  minutes: number;
+  goals_scored: number;
+  assists: number;
+  clean_sheets: number;
+  bonus: number;
+  expected_goals: string;
+  expected_assists: string;
+  news: string;
+  status: string;
+  chance_of_playing_next_round: number | null;
+  dreamteam_count: number;
+  ep_next: string;
+  ep_this: string;
+}
+
 // FPL API Bootstrap Static Response
 export interface BootstrapStaticResponse {
   teams: Team[];
-  totalPlayers: number;
-  elements: Element[];
-  elementTypes: ElementType[];
+  total_players: number;
+  elements: FPLElement[];
+  element_types: ElementType[];
   events: Event[];
 }
 
